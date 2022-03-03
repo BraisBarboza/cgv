@@ -6,11 +6,12 @@
 
 GLint ancho=400;
 GLint alto=400;
+GLfloat  angulos[2][3] ={
+    {0.0f,0.0f,0.0f},
+    {0.0f,0.0f,0.0f}
+}; 
 
-GLfloat anguloCuboX = 0.0f;
-GLfloat anguloCuboY = 0.0f;
-GLfloat anguloEsfera = 0.0f;
-
+int joint=0;
 int hazPerspectiva = 0;
 
 void reshape(int width, int height)
@@ -18,14 +19,8 @@ void reshape(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    
-    if(hazPerspectiva)
-        gluPerspective(60.0f, (GLfloat)width/(GLfloat)height, 1.0f, 20.0f);
-    else       
-        glOrtho(-4,4, -4, 4, 1, 10);
-
+     glOrtho(-8,8, -8, 8, 1, 10);
     glMatrixMode(GL_MODELVIEW);
- 
     ancho = width;
     alto = height;
 }
@@ -80,32 +75,59 @@ void drawCube(void)
     glVertex3f(-1.0f,-1.0f, -1.0f);
     glEnd();
 }
-
+void rotate(int joint,int axis,int amount){//funcion que modifica el angulo deseado
+    angulos[joint][axis]=angulos[joint][axis]+amount;
+}
+void _half_member(int joint){//dibuja medio miembro y le pasamos su controlador
+    glutWireSphere(0.5f, 8, 8);//dibujamos la esfera con su angulo y el cubo pegado
+    glRotatef(angulos[joint][0], 1.0f, 0.0f, 0.0f);
+    glRotatef(angulos[joint][1], 0.0f, 1.0f, 0.0f);
+    glRotatef(angulos[joint][2], 0.0f, 0.0f, 1.0f);
+    glTranslatef(1.5f,0.0f,0.0f);
+    glPushMatrix();
+    glScalef(2.0,1.0,1.0);
+    glScalef(0.5,0.5,0.5);
+    drawCube();
+    glPopMatrix();
+}
+void member(int joint1, int joint2){
+  glPushMatrix();
+  _half_member(joint);
+  glTranslatef(1.5f,0.0f,0.0f);
+  _half_member(joint);
+  glPopMatrix();
+}
 void display()
 { 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-
-    glTranslatef(0.0f, 0.0f, -5.0f);
- 
-    glRotatef(anguloCuboX, 1.0f, 0.0f, 0.0f);
-    glRotatef(anguloCuboY, 0.0f, 1.0f, 0.0f); 
+    glTranslatef(0.0f,0.0f,-5.0f);
+    glPushMatrix();
+    glScalef(3.0,4.0,1.0);
     drawCube();
- 
+    glPopMatrix();
+    glTranslatef(3.5f,2.0f,0.0f);
+    member(0,1);
+    glTranslatef(-7.0f,0.0f,0.0f);
+    glPushMatrix();
+    glRotatef(180, 0.0f, 1.0f, 0.0f);
+    glRotatef(180, 1.0f, 0.0f, 0.0f);
+    member(0,1);
+    glPopMatrix();
+    glTranslatef(2.0f,-6.5f,0.0f);
+    glPushMatrix();
+    glRotatef(-90, 0.0f, 0.0f, 1.0f);
+    member(0,1);
+    glPopMatrix();
+    glTranslatef(3.0f,0.0f,0.0f);
+    glPushMatrix();
+    glRotatef(-90, 0.0f, 0.0f, 1.0f);
+    member(0,1);
+    glPopMatrix();
     glLoadIdentity();
- 
-    glTranslatef(0.0f, 0.0f, -5.0f);
-    glRotatef(anguloEsfera, 0.0f, 1.0f, 0.0f);
-    glTranslatef(3.0f, 0.0f, 0.0f);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glutWireSphere(0.5f, 8, 8);
- 
     glFlush();
     glutSwapBuffers();
- 
-    anguloCuboX+=0.1f;
-    anguloCuboY+=0.1f;
-    anguloEsfera+=0.2f;
+    
 }
 
 void init()
@@ -126,16 +148,44 @@ void keyboard(unsigned char key, int x, int y)
 {
     switch(key)
     {
-    case 'p':
-    case 'P':
-      hazPerspectiva=1;
-      reshape(ancho,alto);
+    case 'Q'://q y e seleccionan la articulacion
+    case 'q':
+      joint=0 ;
       break;
  
-    case 'o':
-    case 'O':
-      hazPerspectiva=0;
-      reshape(ancho,alto);
+    case 'e':
+    case 'E':
+      joint=1;
+      break;
+ 
+    case 'W'://wasd modifican el valor del angulo en la direccion deseada
+    case 'w':
+      rotate(joint,1,1);
+      break;
+ 
+    case 'a':
+    case 'A':
+      rotate(joint,0,-1);
+      break;
+ 
+    case 's':
+    case 'S':
+      rotate(joint,1,-1);
+      break;
+ 
+    case 'D':
+    case 'd':
+      rotate(joint,0,1);
+      break;
+ 
+    case 'Z':
+    case 'z':
+      rotate(joint,2,1);
+      break;
+ 
+    case 'C':
+    case 'c':
+      rotate(joint,2,-1);
       break;
  
     case 27:   // escape
